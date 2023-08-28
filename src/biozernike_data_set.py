@@ -16,7 +16,7 @@ class BiozernikeDataset(Dataset):
         df = pd.read_csv(coefficients_file_name, sep="\t", header=None)
         for i, row_i in df.iterrows():
             self.descriptor_classes.append(row_i[0])
-            self.descriptors.append(np.array(row_i[1:3920], dtype=d_type))
+            self.descriptors.append(np.array(row_i[1:3923], dtype=d_type))
         for i in range(len(self.descriptor_classes)):
             for j in range(i + 1, len(self.descriptor_classes)):
                 self.descriptor_pairs.append([
@@ -30,12 +30,12 @@ class BiozernikeDataset(Dataset):
 
     def __getitem__(self, idx):
         descriptor_i = self.descriptors[self.descriptor_pairs[idx][1]]
-        geom_i = descriptor_i[0:14]
-        cn_i = descriptor_i[14:]
+        geom_i = descriptor_i[0:17]
+        cn_i = descriptor_i[17:]
 
         descriptor_j = self.descriptors[self.descriptor_pairs[idx][2]]
-        geom_j = descriptor_j[0:14]
-        cn_j = descriptor_j[14:]
+        geom_j = descriptor_j[0:17]
+        cn_j = descriptor_j[17:]
 
         geom = 2 * np.absolute(geom_i - geom_j) / (1 + np.absolute(geom_i) + np.absolute(geom_j))
         cn = np.absolute(cn_i - cn_j)
