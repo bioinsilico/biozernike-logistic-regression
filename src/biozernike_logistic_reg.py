@@ -5,10 +5,12 @@ from src.logistic_regr_nn import LogisticRegression
 from src.biozernike_data_set import BiozernikeDataset
 
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import auc
 
-learningRate = 1e-5
+learningRate = 1e-6
 epochs = 100
-batch_size = 2**8
+batch_size = 2 ** 8
 l2_weight = 1
 
 cath_coefficients_file = "../resources/cath_moments.tsv"
@@ -34,12 +36,15 @@ for epoch in range(epochs):
     for x_train, y_train in train_dataloader:
         optimizer.zero_grad()
         y_predicted = model(x_train)
-        loss = criterion(y_predicted, y_train) + l2_weight * torch.sum(model.get_weights()**2)
+        loss = criterion(y_predicted, y_train) + l2_weight * torch.sum(model.get_weights() ** 2)
         loss.backward()
         optimizer.step()
 
-        y_evaluation = model(x_test)
-        auc = roc_auc_score(y_test.detach().numpy(), y_evaluation.detach().numpy())
-        if batch_n % 100 == 0:
-            print("epoch %s, batch number %s, loss %s, testing auc %s" % (epoch, batch_n, loss.item(), auc))
+        if batch_n % 1000 == 0:
+            y_evaluation = model(x_test)
+            roc_auc = roc_auc_score(y_test.detach().numpy(), y_evaluation.detach().numpy())
+            precision, recall, thresholds = precision_recall_curve(y_test.detach().numpy(), y_evaluation.detach().numpy())
+            pr_auc = auc(recall, precision)
+            print("epoch %s, batch number %s, loss %s, testing roc %s auc %s" % (epoch, batch_n, loss.item(), roc_auc, pr_auc))
+
         batch_n += 1
