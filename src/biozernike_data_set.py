@@ -45,6 +45,6 @@ class BiozernikeDataset(Dataset):
         return torch.from_numpy(np.concatenate((geom, cn))), torch.from_numpy(label)
 
     def weights(self):
-        p = sum([dp[0] for dp in self.descriptor_pairs])
-        n = sum([1 - dp[0] for dp in self.descriptor_pairs])
+        p = 0.5 / sum([dp[0] for dp in self.descriptor_pairs])
+        n = 0.5 / sum([1 - dp[0] for dp in self.descriptor_pairs])
         return torch.tensor([p if dp[0] == 1. else n for dp in self.descriptor_pairs])

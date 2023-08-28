@@ -9,7 +9,7 @@ from sklearn.metrics import roc_auc_score
 learningRate = 1e-5
 epochs = 100
 batch_size = 2**8
-l2_weight = 2
+l2_weight = 1
 
 cath_coefficients_file = "../resources/cath_moments.tsv"
 ecod_coefficients_file = "../resources/ecod_moments.tsv"
