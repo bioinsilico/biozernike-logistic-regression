@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.logistic_regr_nn import LogisticRegression
+from src.logistic_regr_nn import LogisticRegression, LogisticRegressionUniform
 from src.biozernike_data_set import BiozernikeDataset
 
 from torch.utils.tensorboard import SummaryWriter
@@ -14,6 +14,7 @@ learningRate = 1e-5
 epochs = 1000
 batch_size = 2 ** 8
 l2_weight = 1
+evaluation_step = 1000
 
 cath_coefficients_file = "../resources/cath_moments.tsv"
 ecod_coefficients_file = "../resources/ecod_moments.tsv"
@@ -24,16 +25,18 @@ sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), repla
 train_dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size)
 
 testing_set = BiozernikeDataset(ecod_coefficients_file)
-test_dataloader = DataLoader(testing_set, batch_size=len(testing_set), shuffle=True)
+test_dataloader = DataLoader(testing_set, batch_size=len(testing_set))
 x_test, y_test = next(iter(test_dataloader))
 
 writer = SummaryWriter()
 
-model = LogisticRegression(input_features=3922)
+model = LogisticRegressionUniform(input_features=3922)
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
 
-batch_n = 1
+writer.add_graph(model, x_test[0])
+
+batch_n = 0
 print("Starting training. Number of batches: %s" % (len(train_dataloader)))
 for epoch in range(epochs):
     loss = None
@@ -44,7 +47,7 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
-        if batch_n % 1000 == 0:
+        if batch_n % evaluation_step == 0:
             y_evaluation = model(x_test)
             roc_auc = roc_auc_score(y_test.detach().numpy(), y_evaluation.detach().numpy())
             precision, recall, thresholds = precision_recall_curve(
@@ -63,6 +66,22 @@ for epoch in range(epochs):
             writer.add_scalar("ROC/1000batches", roc_auc, batch_n//1000)
             writer.add_scalar("AUC/1000batches", pr_auc, batch_n//1000)
             writer.add_histogram("Weights/1000batches", model.get_weights(), batch_n//1000)
+            writer.add_histogram("Bias/1000batches", model.get_bias(), batch_n//1000)
+            sorted_evaluation = torch.Tensor.tolist(torch.squeeze(torch.argsort(y_evaluation, dim=0, descending=True)))
+            writer.add_text(
+                "High Prediction/Last batch",
+                "  \n".join([
+                    "%s : %s : %s" % (testing_set.get_classes(idx), y_test[idx, 0].item(), y_evaluation[idx, 0].item())
+                    for idx in sorted_evaluation[0:1000]
+                ])
+            )
+            writer.add_text(
+                "Low Prediction/Last batch",
+                "  \n".join([
+                    "%s : %s : %s" % (testing_set.get_classes(idx), y_test[idx, 0].item(), y_evaluation[idx, 0].item())
+                    for idx in sorted_evaluation[len(sorted_evaluation)-1000:len(sorted_evaluation)]
+                ])
+            )
             writer.flush()
 
         batch_n += 1

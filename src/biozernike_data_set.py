@@ -44,6 +44,11 @@ class BiozernikeDataset(Dataset):
 
         return torch.from_numpy(np.concatenate((geom, cn))), torch.from_numpy(label)
 
+    def get_classes(self, idx):
+        class_i = self.descriptor_classes[self.descriptor_pairs[idx][1]]
+        class_j = self.descriptor_classes[self.descriptor_pairs[idx][2]]
+        return "%s - %s" % (class_i, class_j)
+
     def weights(self):
         p = 0.5 / sum([dp[0] for dp in self.descriptor_pairs])
         n = 0.5 / sum([1 - dp[0] for dp in self.descriptor_pairs])
