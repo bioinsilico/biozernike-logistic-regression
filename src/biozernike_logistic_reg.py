@@ -1,5 +1,6 @@
 import torch
 import time
+import sys
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from src.logistic_regr_nn import LogisticRegression, LogisticRegressionUniform
@@ -17,8 +18,8 @@ batch_size = 2 ** 10
 l2_weight = 1
 evaluation_step = 1000
 
-cath_coefficients_file = "../resources/cath_moments.tsv"
-ecod_coefficients_file = "../resources/ecod_moments.tsv"
+cath_coefficients_file = sys.argv[0]
+ecod_coefficients_file = sys.argv[1]
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
