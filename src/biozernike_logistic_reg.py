@@ -29,11 +29,14 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(testing_set, batch_size=len(testing_set))
     x_test, y_test = next(iter(test_dataloader))
 
-    writer = SummaryWriter(comment=" | learning-rate: %s batch-size: %s l2-weight: %s" % (
-        learning_rate,
-        batch_size,
-        l2_weight
-    ))
+    writer = SummaryWriter(
+        log_dir="../tensorboard/runs",
+        comment=" | learning-rate: %s batch-size: %s l2-weight: %s" % (
+            learning_rate,
+            batch_size,
+            l2_weight
+        )
+    )
 
     model = LogisticRegression(input_features=3922)
     criterion = torch.nn.MSELoss()

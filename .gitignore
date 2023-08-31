@@ -2,3 +2,4 @@
 .idea
 *.iml
 src/__pycache__
+/tensorboard
