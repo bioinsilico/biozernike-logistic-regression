@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from src.logistic_regr_nn import LogisticRegression, LogisticRegressionUniform
 from src.biozernike_data_set import BiozernikeDataset
 
+from torch.utils.tensorboard import SummaryWriter
+
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import auc
