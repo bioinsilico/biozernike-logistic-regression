@@ -14,7 +14,7 @@ from sklearn.metrics import auc
 
 learningRate = 1e-5
 epochs = 1000
-batch_size = 2 ** 8
+batch_size = 2 ** 10
 l2_weight = 1
 evaluation_step = 1000
 
@@ -41,7 +41,7 @@ model = LogisticRegressionUniform(input_features=3922).to(device)
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
 
-writer.add_graph(model, x_test[0])
+writer.add_graph(model, x_test[0].to(device))
 
 batch_n = 0
 print("Starting training. Number of batches: %s" % (len(train_dataloader)))
