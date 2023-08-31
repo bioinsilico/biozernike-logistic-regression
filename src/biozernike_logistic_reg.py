@@ -14,12 +14,12 @@ from sklearn.metrics import auc
 
 learningRate = 1e-5
 epochs = 1000
-batch_size = 2 ** 10
+batch_size = 2 ** 8
 l2_weight = 1
 evaluation_step = 1000
 
-cath_coefficients_file = sys.argv[0]
-ecod_coefficients_file = sys.argv[1]
+cath_coefficients_file = sys.argv[1]
+ecod_coefficients_file = sys.argv[2]
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
@@ -28,10 +28,12 @@ dataset = BiozernikeDataset(cath_coefficients_file)
 weights = dataset.weights()
 sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), replacement=True)
 train_dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size, num_workers=4)
+print("Read CATH training set")
 
 testing_set = BiozernikeDataset(ecod_coefficients_file)
 test_dataloader = DataLoader(testing_set, batch_size=len(testing_set))
 x_test, y_test = next(iter(test_dataloader))
+print("Read ECOD test set")
 
 writer = SummaryWriter()
 
