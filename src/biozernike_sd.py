@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.fully_connected_nn import FullyConnectedSigmoid, FullySigmoid
+from src.fully_connected_nn import FullyConnectedSigmoid, FullySigmoid, LogisticRegression
 from src.biozernike_data_set import BiozernikeDataset
 
 from torch.utils.tensorboard import SummaryWriter
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     batch_size = 2 ** 8
     l2_weight = 1e0
     evaluation_step = 10000
-    hidden_layer = 2 ** 6
+    hidden_layer = 2 ** 10
 
     cath_coefficients_file = "../resources/cath_moments.tsv"
     ecod_coefficients_file = "../resources/ecod_moments.tsv"
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     dataset = BiozernikeDataset(cath_coefficients_file)
     weights = dataset.weights()
     sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), replacement=True)
-    train_dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size, num_workers=2)
+    train_dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size)
 
     testing_set = BiozernikeDataset(ecod_coefficients_file)
     test_dataloader = DataLoader(testing_set, batch_size=len(testing_set))
@@ -33,6 +33,7 @@ if __name__ == '__main__':
     writer = SummaryWriter()
 
     model = FullyConnectedSigmoid(input_features=3922, hidden_layer=hidden_layer)
+    # model = LogisticRegression(input_features=3922)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.AdamW(model.get_params(), lr=learning_rate, weight_decay=l2_weight)
 
