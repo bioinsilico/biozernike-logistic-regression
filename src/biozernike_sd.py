@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.fully_connected_nn import FullyConnectedSigmoid, FullySigmoid, LogisticRegression
-from src.biozernike_data_set import BiozernikeDataset
+from src.networks.fully_connected_nn import FullyConnectedSigmoid
+from src.data_set.biozernike_data_set import BiozernikeDataset
 
 from torch.utils.tensorboard import SummaryWriter
 

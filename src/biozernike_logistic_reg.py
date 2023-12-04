@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.logistic_regr_nn import LogisticRegression, LogisticRegressionUniform
-from src.biozernike_data_set import BiozernikeDataset
+from src.networks.logistic_regr_nn import LogisticRegression
+from src.data_set.biozernike_data_set import BiozernikeDataset
 
 from torch.utils.tensorboard import SummaryWriter
 

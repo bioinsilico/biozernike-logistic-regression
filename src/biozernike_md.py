@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.biozernike_data_set_md import BiozernikeDatasetMD
-from src.fully_connected_nn import FullyConnected
+from src.data_set.biozernike_data_set_md import BiozernikeDatasetMD
+from src.networks.fully_connected_nn import FullyConnected
 
 from torch.utils.tensorboard import SummaryWriter
 
