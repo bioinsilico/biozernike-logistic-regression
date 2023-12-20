@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
-from src.networks.fully_connected_nn import FullyConnectedSigmoid, TwoLayersFullyConnectedSigmoid
-from src.data_set.biozernike_data_set import BiozernikeDataset
+from src.networks.fully_connected_embedding_nn import EmbeddingCosine, RawEmbeddingCosine
+from src.data_set.biozernike_data_set_raw_pairs import BiozernikeDataset
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     batch_size = 2 ** 8
     l2_weight = 1e0
     evaluation_step = 10000
-    hidden_layer = 2 ** 5
+    hidden_layer = 2 ** 10
 
     cath_coefficients_file = "../resources/cath_moments.tsv"
     ecod_coefficients_file = "../resources/ecod_moments.tsv"
@@ -28,17 +28,15 @@ if __name__ == '__main__':
 
     testing_set = BiozernikeDataset(ecod_coefficients_file)
     test_dataloader = DataLoader(testing_set, batch_size=len(testing_set))
-    x_test, y_test = next(iter(test_dataloader))
+    x_test, y_test, z_test = next(iter(test_dataloader))
 
     writer = SummaryWriter()
 
-    model = TwoLayersFullyConnectedSigmoid(input_features=3922, hidden_layer=hidden_layer)
-    # model = FullyConnectedSigmoid(input_features=3922, hidden_layer=hidden_layer)
-    # model = LogisticRegression(input_features=3922)
+    model = RawEmbeddingCosine(input_features=3922, hidden_layer=hidden_layer)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.AdamW(model.get_params(), lr=learning_rate, weight_decay=l2_weight)
 
-    writer.add_graph(model, x_test[0])
+    writer.add_graph(model, (torch.unsqueeze(x_test[0], 0), torch.unsqueeze(y_test[0], 0)))
     writer.add_text(
         "Description",
         "learning-rate: %s  \nbatch-size: %s  \nl2-weight: %s  \nhidden-layer: %s  \nmodel-name: %s  \noptimizer: %s  \nloss: %s  \n"
@@ -48,18 +46,18 @@ if __name__ == '__main__':
     print("Starting training. Number of batches: %s" % (len(train_dataloader)))
     loss = None
     for epoch in range(epochs):
-        for x_train, y_train in train_dataloader:
+        for x_train, y_train, z_train in train_dataloader:
             optimizer.zero_grad()
-            y_predicted = model(x_train)
-            loss = criterion(y_predicted, y_train)
+            z_predicted = model(x_train, y_train)
+            loss = criterion(z_predicted, z_train)
             loss.backward()
             optimizer.step()
 
-        y_evaluation = model(x_test)
-        roc_auc = roc_auc_score(y_test.detach().numpy(), y_evaluation.detach().numpy())
+        z_evaluation = model(x_test, y_test)
+        roc_auc = roc_auc_score(z_test.detach().numpy(), z_evaluation.detach().numpy())
         precision, recall, thresholds = precision_recall_curve(
-            y_test.detach().numpy(),
-            y_evaluation.detach().numpy()
+            z_test.detach().numpy(),
+            z_evaluation.detach().numpy()
         )
         pr_auc = auc(recall, precision)
         print("epoch %s, loss %s, testing roc %s auc %s" % (
@@ -72,7 +70,7 @@ if __name__ == '__main__':
         writer.add_scalar("ROC/epoch", roc_auc, epoch)
         writer.add_scalar("AUC/epoch", pr_auc, epoch)
         sorted_evaluation = torch.Tensor.tolist(
-            torch.squeeze(torch.argsort(y_evaluation, dim=0, descending=True))
+            torch.squeeze(torch.argsort(z_evaluation, dim=0, descending=True))
         )
 
         for name, param in model.get_weights():
@@ -82,7 +80,7 @@ if __name__ == '__main__':
             "High Prediction/Last batch",
             "  \n".join([
                 "%s : %s : %s" % (
-                    testing_set.get_classes(idx), y_test[idx, 0].item(), y_evaluation[idx, 0].item())
+                    testing_set.get_classes(idx), z_test[idx].item(), z_evaluation[idx].item())
                 for idx in sorted_evaluation[0:1000]
             ])
         )
@@ -90,7 +88,7 @@ if __name__ == '__main__':
             "Low Prediction/Last batch",
             "  \n".join([
                 "%s : %s : %s" % (
-                    testing_set.get_classes(idx), y_test[idx, 0].item(), y_evaluation[idx, 0].item())
+                    testing_set.get_classes(idx), z_test[idx].item(), z_evaluation[idx].item())
                 for idx in sorted_evaluation[len(sorted_evaluation) - 1000:len(sorted_evaluation)]
             ])
         )

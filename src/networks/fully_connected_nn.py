@@ -57,6 +57,37 @@ class FullyConnectedSigmoid(nn.Module):
         return self.model(x)
 
 
+class TwoLayersFullyConnectedSigmoid(nn.Module):
+
+    def get_params(self):
+        decay = []
+        no_decay = []
+        decay.append(self.model.lin1.weight)
+        decay.append(self.model.lin2.weight)
+        decay.append(self.model.lin3.weight)
+        no_decay.append(self.model.lin1.bias)
+        no_decay.append(self.model.lin2.bias)
+        no_decay.append(self.model.lin3.bias)
+        return {'params': no_decay, 'weight_decay': 0}, {'params': decay}
+
+    def get_weights(self):
+        return [(name, param) for name, param in self.model.named_parameters()]
+
+    def __init__(self, input_features=1, hidden_layer=512):
+        super().__init__()
+        self.model = nn.Sequential(OrderedDict([
+            ('lin1', nn.Linear(input_features, hidden_layer)),
+            ('relu1', nn.ReLU()),
+            ('lin2', nn.Linear(hidden_layer, hidden_layer)),
+            ('relu2', nn.ReLU()),
+            ('lin3', nn.Linear(hidden_layer, 1)),
+            ('sigmoid', nn.Sigmoid())
+        ]))
+
+    def forward(self, x):
+        return self.model(x)
+
+
 class FullySigmoid(nn.Module):
 
     def get_params(self):

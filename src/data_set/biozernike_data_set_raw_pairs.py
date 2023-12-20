@@ -30,19 +30,10 @@ class BiozernikeDataset(Dataset):
 
     def __getitem__(self, idx):
         descriptor_i = self.descriptors[self.descriptor_pairs[idx][1]]
-        geom_i = descriptor_i[0:17]
-        cn_i = descriptor_i[17:]
-
         descriptor_j = self.descriptors[self.descriptor_pairs[idx][2]]
-        geom_j = descriptor_j[0:17]
-        cn_j = descriptor_j[17:]
+        label = np.array(self.descriptor_pairs[idx][0], dtype=d_type)
 
-        geom = 2 * np.absolute(geom_i - geom_j) / (1 + np.absolute(geom_i) + np.absolute(geom_j))
-        cn = np.absolute(cn_i - cn_j)
-
-        label = np.array([self.descriptor_pairs[idx][0]], dtype=d_type)
-
-        return torch.from_numpy(np.concatenate((geom, cn))), torch.from_numpy(label)
+        return torch.from_numpy(descriptor_i), torch.from_numpy(descriptor_j), torch.from_numpy(label)
 
     def get_classes(self, idx):
         class_i = self.descriptor_classes[self.descriptor_pairs[idx][1]]
